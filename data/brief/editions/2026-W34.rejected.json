@@ -1,0 +1,151 @@
+{
+  "edition_id": "2026-W34",
+  "rejected_at": "2026-08-23T15:20:16.042Z",
+  "items": [
+    {
+      "headline": "Sector-wide momentum for AI literacy gates before tool access exposes UC's lack of a systemwide prerequisite standard",
+      "reasons": [
+        "feed_source.member_id \"topic\" is not a known committee member",
+        "feed_source.member_id \"topic\" is not a known committee member"
+      ],
+      "raw": {
+        "item_id": "item-2",
+        "priority": 4,
+        "headline": "Sector-wide momentum for AI literacy gates before tool access exposes UC's lack of a systemwide prerequisite standard",
+        "what_happened": "The University of Colorado Colorado Springs launched its ChatGPT Edu student access phase on August 14, 2026, requiring all students, faculty, and staff to complete a Canvas-based 'AI Literacy Foundations' course before gaining access. Columbia University's aiX Weekly on August 19 synthesized this and related moves, noting a sector shift from negotiating AI access toward designing mandatory conditions around it, with 92% of surveyed College Board faculty expressing concern over AI-enabled plagiarism.",
+        "why_it_matters": "UC has a systemwide AI training module and a webinar series for faculty and staff, but no systemwide prerequisite or literacy gate tied to tool access. Campus AI platforms — ZotGPT at UCI, TritonGPT at UCSD, River at Berkeley, Aggie AI at Davis — are each deployed without a common access condition. The sector is moving toward mandatory literacy prerequisites as the governing mechanism for responsible deployment; UC's training program exists but is decoupled from any access control. The Academic Senate's UCEP annual reminder on academic integrity addresses GenAI, but the two tracks — training and access — are not linked systemwide.",
+        "for_the_committee": "Should the committee recommend a minimum UC-wide AI literacy prerequisite standard that campuses can implement through their existing platforms, or does the Senate's academic integrity track make a separate access gate duplicative?",
+        "feed_sources": [
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "34ee1a3d2aa7e01ad4282a51021f0a31",
+            "member_id": "topic",
+            "url": "https://news.uccs.edu/2026/08/14/chatgpt-edu-launches-for-students",
+            "title": "UCCS Launches Student Access to ChatGPT Edu with Mandatory AI Literacy Gate",
+            "published_at": "2026-08-14"
+          },
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "39555003a212ec2994f556a7377acbd9",
+            "member_id": "topic",
+            "url": "https://sites.stat.columbia.edu/tzheng/post/2026-08-19-aix-weekly-newsletter",
+            "title": "Columbia University's aiX Weekly: Shift to AI Literacy Gates and Assessment Reform",
+            "published_at": "2026-08-19"
+          }
+        ],
+        "baseline_anchors": [
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "training",
+            "field": "has_ai_training_program",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "infrastructure",
+            "field": "has_enterprise_ai_platform",
+            "claim_kind": "uc_silent"
+          },
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "academic_integrity",
+            "field": "has_genai_academic_integrity_guidance",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "peer_anchors": [],
+        "experts": [
+          {
+            "member_id": "moe-r",
+            "why": "AVP for UC Online; oversees systemwide online learning infrastructure and co-chaired prior AI Council Risk and Transparency subcommittee"
+          },
+          {
+            "member_id": "tassio-m",
+            "why": "Co-chairs UCSC AI Council and UC systemwide CTL Working Group on AI; direct operational experience integrating AI literacy into campus governance"
+          },
+          {
+            "member_id": "noble-s",
+            "why": "Algorithmic accountability expertise; equity implications of access conditions for first-generation students"
+          }
+        ]
+      }
+    },
+    {
+      "headline": "Assessment reform debate reaches public prominence as Dartmouth provost and sector commentators push for independent-competence testing alongside AI-assisted work",
+      "reasons": [
+        "feed_source.member_id \"topic\" is not a known committee member",
+        "feed_source.member_id \"topic\" is not a known committee member",
+        "feed_source.member_id \"topic\" is not a known committee member"
+      ],
+      "raw": {
+        "item_id": "item-3",
+        "priority": 4,
+        "headline": "Assessment reform debate reaches public prominence as Dartmouth provost and sector commentators push for independent-competence testing alongside AI-assisted work",
+        "what_happened": "On August 9, 2026, Dartmouth College Provost Santiago Schnell published a Washington Post op-ed arguing that a degree must separately certify what students can do independently from what they can accomplish with AI, and that institutions are reviving proctored exams, blue books, and oral assessments to make that distinction legible. Separately, Columbia Law School's new AI policy, effective August 1, 2026, was reported on August 15 as a 'largely permissive' learning-aid model that nonetheless bars AI-generated submitted content, and the ABA Journal noted August 10 that Berkeley, Chicago, and UT Austin are among schools grappling with cognitive deskilling concerns.",
+        "why_it_matters": "UC's systemwide academic integrity guidance — the UCEP annual reminder updated with GenAI provisions in September 2025 — addresses honesty norms but does not establish a UC position on independent-competence assessment design or mandate any specific assessment modality. Campus guidance varies: Berkeley's Spring 2025 guidance offers three syllabus tiers and explicitly discourages AI detection tools; UCSD has a Critical AI Literacy module and an instructor guide; UCSB's 2023 EVC memo explicitly rejects plagiarism detection software. UC has no systemwide answer to the question the Dartmouth provost is posing — whether the credential itself must attest to independent capability — and the sector is moving toward that question as the central one.",
+        "for_the_committee": "Should UC develop a systemwide position on independent-competence assessment — distinguishing credential-level attestation from course-level AI use policy — or is this appropriately left to the Academic Senate and campus faculties?",
+        "feed_sources": [
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "08c4dfd436e33f34641671a3563f2fcb",
+            "member_id": "topic",
+            "url": "https://www.washingtonpost.com/opinions/2026/08/09/ai-college-exams-blue-books-oral-assessments",
+            "title": "A degree should distinguish what students can do independently from what they can accomplish with AI",
+            "published_at": "2026-08-09"
+          },
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "618388485768b013be3074325d74cafb",
+            "member_id": "topic",
+            "url": "https://columbiaspectator.com/news/2026/08/15/law-school-introduces-largely-permissive-ai-policy",
+            "title": "Law School introduces largely permissive AI policy",
+            "published_at": "2026-08-15"
+          },
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "d100b79b575a416a9bc8064cc3af8988",
+            "member_id": "topic",
+            "url": "https://www.abajournal.com/news/article/columbia-law-school-updates-ai-policy-with-new-restrictions",
+            "title": "Columbia Law School updates AI policy with new restrictions",
+            "published_at": "2026-08-10"
+          }
+        ],
+        "baseline_anchors": [
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "academic_integrity",
+            "field": "has_genai_academic_integrity_guidance",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "uc_berkeley",
+            "dimension": "academic_integrity",
+            "field": "has_ai_detection_position",
+            "claim_kind": "uc_contradicts"
+          },
+          {
+            "entity_id": "uc_santa_barbara",
+            "dimension": "academic_integrity",
+            "field": "has_no_plagiarism_detection_support",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "peer_anchors": [],
+        "experts": [
+          {
+            "member_id": "palazoglu-a",
+            "why": "Academic Senate chair; credential-level attestation is a Senate governance question touching APM and degree standards"
+          },
+          {
+            "member_id": "raley-r",
+            "why": "Critical AI scholar with direct UC Senate governance experience; her PMLA work addresses AI and the university as a service"
+          },
+          {
+            "member_id": "milburn-c",
+            "why": "Directs CAIEF; STS expertise on assessment and human oversight in AI-mediated learning environments"
+          }
+        ]
+      }
+    }
+  ]
+}
