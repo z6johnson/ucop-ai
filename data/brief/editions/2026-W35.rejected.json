@@ -1,0 +1,120 @@
+{
+  "edition_id": "2026-W35",
+  "rejected_at": "2026-08-30T18:25:13.826Z",
+  "items": [
+    {
+      "headline": "California AB 2392 clears Senate Appropriations suspense file, would require UC to join joint AI procurement and training working group",
+      "reasons": [
+        "feed_source.member_id \"topic\" is not a known committee member"
+      ],
+      "raw": {
+        "item_id": "item-1",
+        "priority": 1,
+        "headline": "California AB 2392 clears Senate Appropriations suspense file, would require UC to join joint AI procurement and training working group",
+        "what_happened": "California Assembly Bill 2392 passed the Senate Appropriations Committee suspense file on August 13, 2026. The bill requests that UC, and requires CSU and community colleges, convene a joint working group to recommend AI procurement standards and training requirements before providing generative AI systems to users. The bill now heads toward a Senate floor vote.",
+        "why_it_matters": "UC has no systemwide enterprise AI platform and campuses have independently negotiated procurement agreements with different vendors — a fragmentation the baseline documents explicitly. A mandated joint working group would impose external coordination requirements on a system that has not yet achieved internal harmonization on AI procurement. UC's existing risk assessment framework covers procurement but does not address cross-segment standards of the kind AB 2392 envisions.",
+        "for_the_committee": "Should UC move proactively to shape the working group's scope and membership before the bill reaches the Governor, or defer until the bill's final language is known?",
+        "feed_sources": [
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "679cd9c87e5c5c38f3c112d279947921",
+            "member_id": "topic",
+            "url": "https://legiscan.com/CA/bill/AB2392/2025",
+            "title": "California Assembly Bill 2392: Postsecondary Generative AI Standards and Training",
+            "published_at": "2026-08-14"
+          }
+        ],
+        "baseline_anchors": [
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "infrastructure",
+            "field": "has_enterprise_ai_platform",
+            "claim_kind": "uc_silent"
+          },
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "policy",
+            "field": "has_risk_assessment_framework",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "peer_anchors": [],
+        "experts": [
+          {
+            "member_id": "williams-v",
+            "why": "Systemwide CIO responsible for AI procurement and cross-campus technology coordination"
+          },
+          {
+            "member_id": "crittenden-c",
+            "why": "Leads cross-UC research institute with sustained public-sector AI policy expertise"
+          }
+        ]
+      }
+    },
+    {
+      "headline": "Federal ORI releases first guidance on generative AI in research misconduct proceedings, directly affecting all PHS-funded UC research",
+      "reasons": [
+        "feed_source.member_id \"topic\" is not a known committee member"
+      ],
+      "raw": {
+        "item_id": "item-2",
+        "priority": 1,
+        "headline": "Federal ORI releases first guidance on generative AI in research misconduct proceedings, directly affecting all PHS-funded UC research",
+        "what_happened": "The U.S. Office of Research Integrity published new guidance on August 14, 2026, addressing how institutions should handle research misconduct proceedings that involve generative AI. The guidance covers how to identify accepted disciplinary practices, the limitations of AI detection tools as proof of misconduct, and disclosure requirements for AI use in papers and grant applications.",
+        "why_it_matters": "UC has no systemwide AI-in-research policy; the baseline records this as an inventory gap across most campuses. The ORI guidance creates a compliance floor for all UC institutions receiving PHS funding — including all health systems and major research campuses — without any existing UC-level framework to operationalize it. Only UCSD has a finalized research AI workgroup report; other campuses lack equivalent standing structures to interpret and implement the ORI guidance consistently.",
+        "for_the_committee": "Does UC need an emergency systemwide interpretation of the ORI guidance for PHS-funded investigators, or can campuses implement independently without creating inconsistent compliance postures?",
+        "feed_sources": [
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "47ec0fba0d2098a54b13eceff6c8a889",
+            "member_id": "topic",
+            "url": "https://ori.hhs.gov/blog/oris-guidance-generative-artificial-intelligence-released",
+            "title": "ORI's Guidance on Generative Artificial Intelligence Released",
+            "published_at": "2026-08-14"
+          }
+        ],
+        "baseline_anchors": [
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "research",
+            "field": "has_ai_research_strategy",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "uc_berkeley",
+            "dimension": "research",
+            "field": "has_ai_research_policy",
+            "claim_kind": "uc_silent"
+          },
+          {
+            "entity_id": "uc_davis",
+            "dimension": "research",
+            "field": "has_ai_research_policy",
+            "claim_kind": "uc_silent"
+          },
+          {
+            "entity_id": "uc_san_diego",
+            "dimension": "research",
+            "field": "has_ai_research_policy",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "peer_anchors": [],
+        "experts": [
+          {
+            "member_id": "gupta-r",
+            "why": "Dean of UCSD's data science school with direct stake in research AI policy and DOE-funded AI research programs"
+          },
+          {
+            "member_id": "han-c",
+            "why": "Chief Health Data Officer overseeing PHS-funded health data governance across UC Health systems"
+          },
+          {
+            "member_id": "palazoglu-a",
+            "why": "Academic Senate co-chair with authority to convene senate-side research integrity bodies"
+          }
+        ]
+      }
+    }
+  ]
+}
