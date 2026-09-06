@@ -1,0 +1,200 @@
+{
+  "edition_id": "2026-W36",
+  "rejected_at": "2026-09-06T17:33:23.469Z",
+  "items": [
+    {
+      "headline": "OpenAI enables ChatGPT to connect directly to EHR and healthcare data sources, affecting UC health system deployments",
+      "reasons": [
+        "baseline_anchor entity_id=\"ucsf\" is not in the UC baseline"
+      ],
+      "raw": {
+        "item_id": "item-2",
+        "priority": 3,
+        "headline": "OpenAI enables ChatGPT to connect directly to EHR and healthcare data sources, affecting UC health system deployments",
+        "what_happened": "On September 1, 2026, OpenAI announced that ChatGPT can now connect to electronic health record systems and additional trusted healthcare data sources, allowing clinicians to access patient context, medical research, and institutional data through a single interface. The announcement targets health system enterprise customers and positions the capability as a secure pathway for clinical AI use.",
+        "why_it_matters": "UCSF Health and UCLA Health have active ChatGPT Enterprise deployments; UCSF's baseline explicitly records ChatGPT Enterprise as approved for P3/P4 data with Versa as the HIPAA-compliant clinical pathway. This EHR-connection capability blurs the boundary between those two tiers: it could allow clinicians to route patient-identifiable data through ChatGPT without triggering existing Versa-specific BAA and Data Transfer Agreement requirements. UC has a systemwide Health AI Governance Forum (CDI2) and a Chief Health Data Officer, but no systemwide policy governing when a new vendor capability within an existing contract requires a renewed clinical-use review.",
+        "for_the_committee": "Does the UC Health AI Governance Forum have authority and a defined process to issue a rapid advisory to campuses when a contracted vendor adds clinical data-integration capabilities mid-contract — and if not, who should?",
+        "feed_sources": [
+          {
+            "kind": "vendor",
+            "subkind": "vendor_openai",
+            "url": "https://openai.com/index/chatgpt-connects-health-records-and-healthcare-sources",
+            "title": "Healthcare organizations can now connect EHR and additional industry data to ChatGPT",
+            "published_at": "2026-09-01"
+          }
+        ],
+        "baseline_anchors": [
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "governance",
+            "field": "has_health_ai_governance_forum",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "ucsf_health",
+            "dimension": "security",
+            "field": "has_phi_protection_for_ai",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "ucsf_health",
+            "dimension": "governance",
+            "field": "has_health_ai_oversight",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "ucsf",
+            "dimension": "security",
+            "field": "has_baa_requirement",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "peer_anchors": [],
+        "experts": [
+          {
+            "member_id": "han-c",
+            "why": "Chief Health Data Officer and chair of UC Health AI Governance Forum; responsible for cross-health-system data governance"
+          },
+          {
+            "member_id": "rauschuber-m",
+            "why": "UCSF Health CIO with direct operational responsibility for ChatGPT Enterprise and Versa platform governance"
+          }
+        ]
+      }
+    },
+    {
+      "headline": "MIT releases landmark report recommending oral exams and process portfolios as AI renders written undergraduate assignments unreliable",
+      "reasons": [
+        "peer_anchor peer_id=\"undefined\" is not in the peer baseline",
+        "feed_source.member_id \"topic\" is not a known committee member"
+      ],
+      "raw": {
+        "item_id": "item-3",
+        "priority": 4,
+        "headline": "MIT releases landmark report recommending oral exams and process portfolios as AI renders written undergraduate assignments unreliable",
+        "what_happened": "MIT's Ad Hoc Committee on AI Use in Teaching, Learning, and Research Training released its final report on or around August 25, 2026, concluding that generative AI can credibly address almost any written undergraduate assignment. The committee recommends institutional shifts toward oral exams, process-based portfolios, and course-specific AI policies rather than blanket prohibitions or detection-based enforcement.",
+        "why_it_matters": "UC has a systemwide Academic Senate UCEP annual reminder on academic integrity with GenAI-specific provisions, but the baseline records no systemwide framework for assessment redesign or oral examination guidance. Campus positions are inconsistent: Berkeley's guidance calls AI detection tools 'increasingly less accurate' and provides three syllabus-language options; UCSB explicitly does not support plagiarism detection software; UCSD has an AI literacy module and instructor redesign guides; but no campus has a systemwide-coordinated policy on alternative assessment modalities. MIT's report from a peer research university sets a public benchmark against which UC's decentralized, detection-skeptical but redesign-silent posture will be measured.",
+        "for_the_committee": "Should the committee recommend that the systemwide Academic Senate formalize guidance on alternative assessment modalities — oral exams, process portfolios — rather than leaving each campus to develop parallel frameworks independently?",
+        "feed_sources": [
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "af412f15182c46079525c3149e6c9c71",
+            "member_id": "topic",
+            "url": "https://ai-education.mit.edu/",
+            "title": "MIT's Ad Hoc Committee on AI Use in Teaching, Learning, and Research Training Releases Final Report",
+            "published_at": "2026-08-25"
+          }
+        ],
+        "baseline_anchors": [
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "academic_integrity",
+            "field": "has_genai_academic_integrity_guidance",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "uc_berkeley",
+            "dimension": "academic_integrity",
+            "field": "has_ai_detection_position",
+            "claim_kind": "uc_contradicts"
+          },
+          {
+            "entity_id": "uc_santa_barbara",
+            "dimension": "academic_integrity",
+            "field": "has_no_plagiarism_detection_support",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "uc_san_diego",
+            "dimension": "academic_integrity",
+            "field": "has_education_sawg_report",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "peer_anchors": [
+          {
+            "entity_id": "mit",
+            "dimension": "governance",
+            "field": "has_ai_council",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "experts": [
+          {
+            "member_id": "moe-r",
+            "why": "Co-chaired the Risk and Transparency subcommittee on UC's prior AI Council; works on systemwide online learning and assessment policy"
+          },
+          {
+            "member_id": "raley-r",
+            "why": "Critical AI scholar whose PMLA work directly addresses AI's effects on university teaching and assessment; past Academic Senate vice-chair"
+          },
+          {
+            "member_id": "tassio-m",
+            "why": "Co-chairs UCSC AI Council and the UC Centers for Teaching and Learning Working Group on AI; operational lead on AI integration in teaching practice"
+          }
+        ]
+      }
+    },
+    {
+      "headline": "UC Irvine receives $10M federal grant to lead national center on AI and postsecondary writing, with no systemwide AI research coordination structure in place",
+      "reasons": [
+        "feed_source.member_id \"topic\" is not a known committee member"
+      ],
+      "raw": {
+        "item_id": "item-4",
+        "priority": 4,
+        "headline": "UC Irvine receives $10M federal grant to lead national center on AI and postsecondary writing, with no systemwide AI research coordination structure in place",
+        "what_happened": "On August 27, 2026, UC Irvine announced a $10 million, five-year grant from the U.S. Department of Education's Institute of Education Sciences to establish the WRITE AI Center. The center will lead a national effort to examine how generative AI can strengthen college writing instruction without undermining students' writing, critical thinking, and communication skills.",
+        "why_it_matters": "UCI now leads a federally funded national research center on generative AI in postsecondary writing — a domain directly adjacent to academic integrity and assessment policy questions the committee is working through. The baseline records UCI's OVPTL AI Advisory Committee and ZotGPT infrastructure, but no campus-level research coordination body connecting education research findings to governance. At the system level, UC has no enterprise AI platform, no coordinating mechanism that would route findings from a WRITE AI Center into systemwide policy, and the UC AI Council's Risk Assessment Guide explicitly excludes pedagogy from its scope. The committee has no formal channel to connect this $10M national research asset to its own policy workstreams.",
+        "for_the_committee": "Should the committee establish a standing liaison relationship with the WRITE AI Center so that its national findings on AI and writing instruction can inform UC systemwide academic integrity and assessment policy in real time?",
+        "feed_sources": [
+          {
+            "kind": "committee_signal",
+            "activity_item_id": "9759efab7690192ad815ea5c6a869435",
+            "member_id": "topic",
+            "url": "https://news.uci.edu/2026/08/27/uc-irvine-school-of-education-to-lead-10-million-national-center-on-ai-and-postsecondary-writing",
+            "title": "UC Irvine School of Education to lead $10 million national center on AI and postsecondary writing",
+            "published_at": "2026-08-27"
+          }
+        ],
+        "baseline_anchors": [
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "policy",
+            "field": "has_risk_assessment_framework",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "ucop_systemwide",
+            "dimension": "infrastructure",
+            "field": "has_enterprise_ai_platform",
+            "claim_kind": "uc_silent"
+          },
+          {
+            "entity_id": "uc_irvine",
+            "dimension": "governance",
+            "field": "has_ai_advisory_committee",
+            "claim_kind": "uc_has_position"
+          },
+          {
+            "entity_id": "uc_irvine",
+            "dimension": "research",
+            "field": "has_ai_research_policy",
+            "claim_kind": "uc_has_position"
+          }
+        ],
+        "peer_anchors": [],
+        "experts": [
+          {
+            "member_id": "arkilic-e",
+            "why": "Chief Innovation Officer at UC Irvine with direct visibility into UCI research initiatives and their institutional context"
+          },
+          {
+            "member_id": "crittenden-c",
+            "why": "Leads CITRIS across four UC campuses; experienced at connecting campus research centers to systemwide policy conversations"
+          }
+        ]
+      }
+    }
+  ]
+}
