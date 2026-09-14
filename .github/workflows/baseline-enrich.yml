@@ -1,11 +1,19 @@
 name: Monthly shared-picture enrichment
 
 # Monthly refresh of the UC "shared picture": re-fetches known sources, runs a
-# full entity×dimension discovery sweep, and writes DRAFT changesets under
-# data/enrich/changesets/ for human review. This job PROPOSES only — it never
-# mutates the canonical baseline / peer / committee files. Applying a reviewed
-# changeset is done by a human via `npm run enrich:apply` (see the changeset
-# header for the exact command).
+# full entity×dimension discovery sweep, and writes changesets under
+# data/enrich/changesets/.
+#
+# Each run produces up to two lanes per target:
+#
+#   {id}-auto.md   Changes that met the automatic policy (see lib/enrich/diff.ts).
+#                  Applied by this job, unattended, with no human sign-off.
+#                  Disable with the auto_apply input or ENRICH_AUTO_APPLY=0.
+#
+#   {id}.md        Everything else — every value mutation, anything below high
+#                  confidence, anything flagged, and all committee changes.
+#                  Left as a draft for review at /admin/enrich; nothing in this
+#                  lane touches canonical data until a human approves it there.
 #
 # Required repo secret:
 #   LITELLM_API_KEY  — TritonAI bearer token for discovery + extraction
@@ -39,6 +47,11 @@ on:
         required: false
         default: true
         type: boolean
+      auto_apply:
+        description: "Apply the automatic lane (off = everything waits for review)"
+        required: false
+        default: true
+        type: boolean
       dry_run:
         description: "Build and print changesets without writing/committing"
         required: false
@@ -47,10 +60,11 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
+# Shared with enrich-apply.yml: both write data/ and push, so they must never
+# interleave.
 concurrency:
-  group: baseline-enrich-${{ github.ref }}
+  group: enrich-write
   cancel-in-progress: false
 
 jobs:
@@ -83,131 +97,96 @@ jobs:
           LOOKBACK_DAYS: ${{ inputs.lookback_days || '35' }}
           FULL_SWEEP: ${{ inputs.full_sweep == false && '0' || '1' }}
           DRY_RUN: ${{ inputs.dry_run == true && '1' || '0' }}
+          # Off means no auto lane is generated at all, so everything lands in
+          # the review queue rather than being written and then skipped.
+          ENRICH_AUTO_APPLY: ${{ inputs.auto_apply == false && '0' || '1' }}
         run: npm run enrich:monthly
 
       - name: Validate generated changesets
         if: ${{ inputs.dry_run != true }}
         run: npm run validate:baseline
 
-      # Open a draft PR with the proposals rather than committing silently to the
-      # default branch. A PR is an actionable inbox item — it makes a pending
-      # refresh impossible to miss and carries the exact apply command, closing
-      # the "I ran the enrichment but nothing changed" gap. The canonical files
-      # are still untouched; applying remains a human step on the PR branch.
-      - name: Open a draft PR with the proposals
+      # Apply the automatic lane before committing, so proposals and any
+      # unattended changes land in the same push and trigger one rebuild.
+      # ENRICH_AUTO_APPLY=0 (or auto_apply: false) skips this entirely.
+      - name: Apply the automatic lane
+        id: autoapply
         if: ${{ inputs.dry_run != true }}
+        continue-on-error: true
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ENRICH_AUTO_APPLY: ${{ inputs.auto_apply == false && '0' || '1' }}
+        run: npm run enrich:apply -- --auto-lane
+
+      - name: Validate after the automatic lane
+        id: postvalidate
+        if: ${{ inputs.dry_run != true }}
+        continue-on-error: true
+        run: npm run validate:baseline
+
+      # A bad auto-apply must never block the human queue from landing. If
+      # either step above failed, throw away the canonical edits and keep the
+      # proposals — they are the durable artifact and the reason for the run.
+      - name: Discard the automatic lane if it did not validate
+        if: ${{ inputs.dry_run != true && (steps.autoapply.outcome == 'failure' || steps.postvalidate.outcome == 'failure') }}
+        run: |
+          echo "::error::The automatic lane failed to apply or validate; discarding it and keeping the proposals."
+          git checkout -- data/uc_ai_baseline.json data/peer_ai_baseline.json \
+            data/uc_ai_derived.json data/ENRICHMENT_LOG.md 2>/dev/null || true
+          git checkout -- data/ucnfi-committee/records/ 2>/dev/null || true
+          # Mark the lane so the next run does not silently retry the same thing.
+          for f in data/enrich/changesets/*-auto.md; do
+            [ -e "$f" ] || continue
+            echo "Auto lane left in place for inspection: $f"
+          done
+
+      # Commit straight to the branch, like committee-scan.yml and
+      # brief-weekly.yml. Proposals change nothing users can see until they
+      # are applied, so there is nothing for a PR to protect — and the draft
+      # PR this replaced actively misled, since merging it published nothing.
+      - name: Commit and push
+        if: ${{ inputs.dry_run != true }}
         run: |
           git config user.name "ucnfi-enrich-bot"
           git config user.email "ucnfi-enrich-bot@users.noreply.github.com"
-          git add data/enrich/
+          git add data/
           if git diff --cached --quiet; then
             echo "No proposed changes to commit."
             exit 0
           fi
-
           MONTH=$(date -u +%Y-%m)
-          BASE="${GITHUB_REF#refs/heads/}"
-          BRANCH="enrich/proposals-$MONTH"
+          git commit -m "Monthly shared-picture enrichment — $MONTH"
 
-          # Which changeset files did this run touch (for the PR summary)?
-          CHANGED_MD="$(git diff --cached --name-only -- 'data/enrich/changesets/*.md' || true)"
-
-          git checkout -b "$BRANCH"
-          git commit -m "Monthly shared-picture enrichment proposals — $MONTH"
-
-          # `--force-with-lease` with no explicit expectation compares the remote
-          # against the local remote-tracking ref, and actions/checkout only
-          # fetches the ref that triggered the run — so `origin/$BRANCH` does not
-          # exist here and git aborts with "stale info" before it ever contacts
-          # the remote. That is invisible on the first run of a month (creating a
-          # new branch needs no lease) and fails every re-run afterwards. Fetch
-          # the branch to establish the baseline; an empty lease is the explicit
-          # "this branch must not exist yet" expectation.
-          git fetch --no-tags origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" \
-            || echo "No existing origin/$BRANCH — this run will create it."
-          LEASE="$(git rev-parse --verify --quiet "refs/remotes/origin/$BRANCH" || true)"
-
-          # A re-run in the same month updates the existing proposal branch.
           for attempt in 1 2 3 4 5; do
-            if git push --force-with-lease="$BRANCH:$LEASE" origin "HEAD:refs/heads/$BRANCH"; then
+            if git push origin "HEAD:${GITHUB_REF#refs/heads/}"; then
               echo "Pushed on attempt ${attempt}."
-              break
+              exit 0
             fi
-            if [ "$attempt" = "5" ]; then
-              echo "Giving up after 5 push attempts."
-              exit 1
-            fi
-            # Re-read the remote tip. If it moved, a reviewer or another run
-            # advanced the branch and the lease did its job — stop, because
-            # retrying would force-push their commits away. If it is unchanged
-            # the rejection was transient, so back off and try again.
-            git fetch --no-tags origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" || true
-            CURRENT="$(git rev-parse --verify --quiet "refs/remotes/origin/$BRANCH" || true)"
-            if [ "$CURRENT" != "$LEASE" ]; then
-              echo "origin/$BRANCH moved from ${LEASE:-(absent)} to ${CURRENT:-(absent)}."
-              echo "Refusing to force-push over commits this run did not make."
-              exit 1
-            fi
-            echo "Push rejected on attempt ${attempt}; retrying…"
+            echo "Push rejected on attempt ${attempt}; rebasing and retrying..."
+            git pull --rebase --autostash origin "${GITHUB_REF#refs/heads/}" || true
             sleep "$((attempt * 2))"
           done
+          echo "::error::Could not push after 5 attempts."
+          exit 1
 
-          BODY_FILE="$(mktemp)"
+      - name: Summary
+        if: ${{ always() && inputs.dry_run != true }}
+        run: |
           {
-            echo "Automated monthly enrichment produced the draft changeset(s) below."
+            echo "### Monthly enrichment"
             echo
-            echo "**These are proposals — the canonical baseline is unchanged until a"
-            echo "human reviews and applies them.** That is why a refresh run on its own"
-            echo "does not move any numbers in the app."
-            echo
-            for f in $CHANGED_MD; do
+            for f in data/enrich/changesets/*.md; do
               [ -e "$f" ] || continue
               id="$(basename "$f" .md)"
-              acc="$(grep -c 'DECISION: accept' "$f" || true)"
-              rev="$(grep -c 'DECISION: review' "$f" || true)"
-              rej="$(grep -c 'DECISION: reject' "$f" || true)"
-              echo "- **$id** — $acc ready · $rev need a decision · $rej declined"
-              echo "  - To land: \`npm run enrich:apply -- --changeset $id\` (set \`reviewed_by\` first)"
+              case "$id" in
+                *-auto)
+                  echo "- **$id** - applied automatically, no human sign-off" ;;
+                *)
+                  rev="$(grep -c 'DECISION: review' "$f" || true)"
+                  [ "$rev" = "0" ] && continue
+                  echo "- **$id** - $rev proposal(s) need a decision" ;;
+              esac
             done
             echo
-            echo "Review each \`DECISION:\` line, set \`reviewed_by\`/\`reviewed_at\` in the"
-            echo "changeset frontmatter, then apply. Pending proposals are also listed at"
-            echo "\`/data-status\` in the app."
-          } > "$BODY_FILE"
-
-          # Scope the lookup to OPEN PRs on this head. `gh pr view "$BRANCH"` also
-          # matches a closed PR, which would report "already open" and silently
-          # skip creating the replacement.
-          EXISTING="$(gh pr list --head "$BRANCH" --state open --json number \
-            --jq '.[0].number // empty' 2>/dev/null || true)"
-
-          if [ -n "$EXISTING" ]; then
-            echo "PR #$EXISTING already open for $BRANCH; branch updated."
-          elif PR_ERR="$(gh pr create --draft --base "$BASE" --head "$BRANCH" \
-                 --title "Monthly shared-picture enrichment — $MONTH" \
-                 --body-file "$BODY_FILE" 2>&1)"; then
-            echo "$PR_ERR"
-          else
-            # The proposals are already pushed, so say plainly what is missing and
-            # how to unblock it rather than leaving a bare GraphQL error in the log.
-            COMPARE="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/$BASE...$BRANCH?expand=1"
-            {
-              echo "### Proposals pushed, but the draft PR could not be opened"
-              echo
-              echo "Branch \`$BRANCH\` is up to date on the remote — no work was lost."
-              echo
-              echo '```'
-              echo "$PR_ERR"
-              echo '```'
-              echo
-              echo "If that says Actions is not permitted to create pull requests, turn on"
-              echo "**Settings → Actions → General → Workflow permissions → Allow GitHub"
-              echo "Actions to create and approve pull requests**, or give this step a PAT"
-              echo "with \`repo\` scope as \`GH_TOKEN\`."
-              echo
-              echo "Open it by hand in the meantime: $COMPARE"
-            } | tee -a "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
+            echo "Review and publish at \`/admin/enrich\`. Nothing in the human lane"
+            echo "reaches the baseline until it is approved there."
+          } >> "$GITHUB_STEP_SUMMARY"

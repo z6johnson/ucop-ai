@@ -13,6 +13,7 @@ A Next.js web app over the AI governance baseline dataset (20 entities, 262 data
 | `/chat` | Claude-powered research copilot grounded in the baseline + committee directory. Inline `[entity_id]` and `[member-id]` citations open a side drawer. |
 | `/baseline`, `/baseline/[id]` | Per-entity detail pages over the baseline JSON. |
 | `/about` | Strategy, the ten dimensions, method, and known gaps. |
+| `/admin/enrich` | Review queue for the monthly enrichment run — approve or decline each proposed change and publish. Admin-gated. |
 
 Memo drafting and comparison are scaffolded but hidden from the global nav while content is finalized. The underlying routes (`/memos`, `/memos/new`, `/api/memos`) and admin gate are unchanged.
 
@@ -61,6 +62,9 @@ Key files:
 - [`data/uc_ai_baseline.json`](data/uc_ai_baseline.json) — entity dataset (source of truth, v0.7.0)
 - [`data/ucnfi-committee/`](data/ucnfi-committee/) — committee directory records, schema, and enrichment strategy
 - [`data/ENRICHMENT_LOG.md`](data/ENRICHMENT_LOG.md) — dataset version history and gaps
+- [`data/enrich/changesets/`](data/enrich/changesets/) — monthly proposals. `{id}.md` awaits review at `/admin/enrich`; `{id}-auto.md` was published automatically under policy; `.rejected.json` and `.suppressed.json` record what never made it in and why
+- [`lib/enrich/diff.ts`](lib/enrich/diff.ts) — the policy deciding what may publish without a human
+- [`lib/enrich/apply.ts`](lib/enrich/apply.ts) — the only module that writes canonical data, and the gate it enforces
 - [`content/northstar.ts`](content/northstar.ts) — pillars, Opportunity Areas, research topics
 - [`lib/baseline.ts`](lib/baseline.ts) — typed accessors (`listEntities`, `getEntity`, `queryBaseline`, `baselineStats`)
 - [`lib/committee.ts`](lib/committee.ts) — committee directory loader and facets
@@ -179,7 +183,7 @@ No required config changes. Optional:
 | `DATABASE_URL` | Step 3 | Neon Postgres connection string |
 | `ADMIN_PASSWORD` | Step 3 | Admin cookie gate for editing routes |
 | `NFI_BASE_URL` | Step 3 | Absolute URL used when generating share links |
-| `GITHUB_TOKEN` | Step 4 | Fine-grained PAT used by `/api/memos` to commit new memos |
+| `GITHUB_TOKEN` | Step 4 | Fine-grained PAT — `Contents: Read and write` to commit memos and enrichment decisions, `Actions: Read and write` to start the enrichment publish run |
 | `GITHUB_REPO` | Step 4 | `owner/repo` target for memo commits |
 | `GITHUB_BRANCH` | Step 4 | Optional, defaults to `main` |
 

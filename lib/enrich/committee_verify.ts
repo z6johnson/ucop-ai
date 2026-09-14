@@ -18,6 +18,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { canonicalUrl, isoDateUTC, isoNowUTC } from "../activity.ts";
 import type { FieldRecord } from "../baseline.ts";
 import { getLiteLLMClient } from "../litellm.ts";
+import { partitionSuppressed, readDecisionsLedger } from "./decisions.ts";
 import { classify } from "./diff.ts";
 import { makeCommitteeAdapter, COMMITTEE_DIMENSION, COMMITTEE_FIELD_ALLOWLIST } from "./targets/committee.ts";
 import { validateCandidates } from "./validate.ts";
@@ -42,6 +43,8 @@ export type CommitteeRunOptions = {
 export type CommitteeRunResult = {
   changeset: Changeset;
   rejected: Array<{ entity_id: string; dimension: string; field: string; reasons: string[]; raw: unknown }>;
+  /** Proposals withheld by a standing rejection — see lib/enrich/decisions.ts. */
+  suppressed: ProposedChange[];
 };
 
 function systemPrompt(): string {
@@ -200,11 +203,18 @@ export async function runCommitteeEnrichment(opts: CommitteeRunOptions): Promise
     dimensions_swept: 1,
   };
 
+  // Hold back anything already declined in identical form (see run.ts).
+  const decisionsLedger = readDecisionsLedger(opts.repoRoot);
+  const { kept, suppressed } = partitionSuppressed(changes, decisionsLedger, isoNowUTC(opts.runDate));
+  manifest.suppressed = suppressed.length;
+
   const changeset: Changeset = {
     changeset_id: `${runDateIso.slice(0, 7)}-committee`,
     target: "committee",
     run_date: runDateIso,
     status: "draft",
+    approval_mode: "human",
+    policy_id: "",
     reviewed_by: "",
     reviewed_at: "",
     applied_at: "",
@@ -213,7 +223,7 @@ export async function runCommitteeEnrichment(opts: CommitteeRunOptions): Promise
     base_version: adapter.version(),
     target_version: "",
     inputs_manifest: manifest,
-    changes,
+    changes: kept,
   };
 
   return {
@@ -225,5 +235,6 @@ export async function runCommitteeEnrichment(opts: CommitteeRunOptions): Promise
       reasons: r.reasons,
       raw: r.candidate,
     })),
+    suppressed,
   };
 }

@@ -1,0 +1,303 @@
+{
+  "ucla_health.governance.has_ai_council": {
+    "decision": "accept",
+    "value_fingerprint": "ba19f6b8b8b4737a",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla_health.policy.has_ai_council": {
+    "decision": "accept",
+    "value_fingerprint": "ba19f6b8b8b4737a",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucop_systemwide.academic_integrity.has_genai_academic_integrity_guidance": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_berkeley.governance.has_ai_council": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_berkeley.infrastructure.has_ai_hub_portal": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_berkeley.infrastructure.has_enterprise_ai_platform": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_berkeley.training.has_ai_training_program": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.governance.has_ai_council": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.policy.has_use_policy": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.policy.has_sensitive_data_guidance": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.security.has_data_classification_for_ai": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.infrastructure.has_enterprise_ai_platform": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.infrastructure.enterprise_platform_name": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.infrastructure.has_ai_hub_portal": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.policy.has_admin_ai_guidance": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.academic_integrity.has_genai_academic_integrity_guidance": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.governance.has_academic_senate_ai_body": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla.governance.has_teaching_ai_committee": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_san_diego.academic_integrity.has_ai_literacy_module": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_san_francisco.policy.has_use_policy": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_san_francisco.engagement.has_chancellor_ai_directive": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis_health.policy.has_health_ai_framework": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis_health.health_ai.has_health_ai_framework": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis_health.security.has_phi_protection_for_ai": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "lbnl.research.has_ai_research_strategy": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "llnl.engagement.has_uc_partnership": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "lanl.governance.has_ai_governance_framework": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "lanl.leadership.has_ai_risks_assessment_lead": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "lanl.research.has_ai_safety_partnership": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucop_systemwide.policy.has_legal_task_force_mapping": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_berkeley.academic_integrity.has_ai_detection_position": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_davis.security.has_p3_p4_restrictions": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla.academic_integrity.has_school_specific_ai_integrity": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla.leadership.has_named_ai_leadership_role": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla.training.has_ai_training_program": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla.engagement.has_ai_survey_data": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla.engagement.has_ai_hub_portal": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucla.security.has_tool_security_matrix": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_san_francisco.leadership.has_ai_monitoring_director": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucsf_health.leadership.has_ai_monitoring_director": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "uc_santa_barbara.engagement.has_ai_community_of_practice": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucsd_health.health_ai.has_faves_principles": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  },
+  "ucsd_health.security.has_phi_protection_for_ai": {
+    "decision": "reject",
+    "value_fingerprint": "05be0b6e46c029f9",
+    "decided_by": "z6johnson",
+    "decided_at": "2026-06-01T19:59:15.092Z",
+    "changeset_id": "2026-06"
+  }
+}

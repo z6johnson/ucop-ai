@@ -9,7 +9,7 @@ import {
   metadata,
 } from "@/lib/baseline";
 import { AppliedList, PendingList } from "@/components/enrich/ChangesetList";
-import { appliedChangesets, pendingChangesets } from "@/lib/enrich/history";
+import { allChangesetSummaries } from "@/lib/enrich/source";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +19,20 @@ function ageInDays(isoDate: string): number {
   return Math.floor((Date.now() - then) / 86_400_000);
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
   const stats = baselineStats();
   const entities = listEntities();
 
-  const pending = pendingChangesets(process.cwd());
-  const applied = appliedChangesets(process.cwd());
+  // Read through the GitHub API rather than readdirSync: next.config.ts does
+  // not trace the changeset files into this route's serverless bundle, so the
+  // filesystem read found nothing in production.
+  const summaries = await allChangesetSummaries();
+  const pending = summaries
+    .filter((s) => s.status === "draft" && s.approval_mode === "human")
+    .sort((a, b) => b.run_date.localeCompare(a.run_date));
+  const applied = summaries
+    .filter((s) => s.status === "applied")
+    .sort((a, b) => b.applied_at.localeCompare(a.applied_at));
   const age = ageInDays(metadata.created);
   const stale = age > 45;
 
@@ -379,11 +387,15 @@ export default function AboutPage() {
           className="prose-body mt-4 max-w-2xl text-sm"
           style={{ color: "var(--color-text-muted)" }}
         >
-          The shared picture is refreshed by a monthly enrichment run that{" "}
-          <em>proposes</em> changes. Nothing reaches this baseline until a human
-          reviews the proposal and applies it — so a refresh that is still
-          pending review will not change the numbers above. Both states are
-          shown below.
+          The shared picture is refreshed by a monthly enrichment run, and what
+          it finds is handled in one of two ways. Changes that assert something
+          new about an entity — a value that differs from the current one, a
+          claim below high confidence, anything about a committee member — are{" "}
+          <em>proposals</em>, and reach this baseline only once a human has
+          reviewed and published them. Purely additive high-confidence fields,
+          and re-confirmations of values already recorded here, are published
+          automatically; those are marked below as such, and are listed with the
+          policy that allowed them rather than a reviewer&rsquo;s name.
         </p>
 
         <div className="mt-10">

@@ -121,10 +121,23 @@ export type EnrichInputsManifest = {
   sources_refreshed: number;
   sources_unchanged: number;
   sources_changed: number;
+  /** Sources that 404/410'd past DEAD_THRESHOLD — the only kind that may imply absence. */
   sources_dead: number;
+  /**
+   * Sources persistently refused by a bot wall (401/403/429). Reported so a
+   * long-blocked source is visible and can be checked by hand; never treated
+   * as evidence the document is gone. Optional for back-compat with
+   * changesets written before the distinction existed.
+   */
+  sources_blocked?: number;
   sources_discovered: number;
   entities_swept: number;
   dimensions_swept: number;
+  /**
+   * Proposals withheld because an identical one was already declined — see
+   * lib/enrich/decisions.ts. Optional for back-compat.
+   */
+  suppressed?: number;
 };
 
 export type ChangesetMeta = {
@@ -133,6 +146,21 @@ export type ChangesetMeta = {
   target: EnrichTarget;
   run_date: string; // ISO date (YYYY-MM-DD), UTC
   status: ChangesetStatus;
+  /**
+   * Who is accountable for applying this changeset.
+   *
+   * `human` — a person reviewed it and `reviewed_by` names them. This is the
+   * only mode that may carry a value mutation.
+   *
+   * `policy` — every change in it was auto-eligible under `policy_id`, and it
+   * applied unattended. Kept as a distinct mode rather than writing a fake
+   * name into `reviewed_by`, so the audit trail never claims a review that
+   * did not happen. apply.ts re-derives eligibility at apply time instead of
+   * trusting this field.
+   */
+  approval_mode: "human" | "policy";
+  /** The policy version that authorised a `policy` changeset; "" when human. */
+  policy_id: string;
   reviewed_by: string; // empty in draft (the human-accountable gate)
   reviewed_at: string; // empty in draft
   applied_at: string; // empty until apply

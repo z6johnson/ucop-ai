@@ -18,6 +18,7 @@ import type {
   CandidateField,
   ChangeKind,
   ChangeStatus,
+  EnrichTarget,
   ProposedChange,
 } from "./types.ts";
 
@@ -59,6 +60,80 @@ export function classifyKind(
     return "newly_contradicted";
   }
   return "changed_value";
+}
+
+/* ------------------------------------------------------------------ */
+/* Risk policy                                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Version of the auto-publish rules below. Recorded on any changeset applied
+ * without a human, so it is always answerable which policy let something
+ * through. Bump it whenever the rules change.
+ */
+export const AUTO_POLICY_ID = "auto-v1";
+
+export type RiskTier = "auto" | "review";
+
+export type PolicyContext = {
+  target: EnrichTarget;
+  /** Forces every change to `review`. Set from ENRICH_AUTO_APPLY=0. */
+  killSwitch?: boolean;
+  /**
+   * `dimension.field` coordinates the target already knows. A change naming a
+   * field outside this set is proposing new canonical vocabulary, which is
+   * never automatic. Omitted (e.g. in tests) means "don't check".
+   */
+  knownFields?: ReadonlySet<string>;
+};
+
+/**
+ * May this change be published without a human looking at it?
+ *
+ * The governing idea is that reviewer attention should be spent on judgement,
+ * not volume — but "low risk" has to mean genuinely low risk, because nothing
+ * downstream will catch a mistake here. Rules, first match wins:
+ *
+ *  1. Kill switch → review. An operator override beats every other rule.
+ *  2. Committee target → review. Facts about named people, always.
+ *  3. Any validation flag → review. The pipeline already doubted it.
+ *  4. unchanged_confirmed → AUTO. Re-confirming a value the baseline already
+ *     holds changes no claim; withholding it just makes provenance staler.
+ *  5. new_field at high confidence, with a real source URL and a field the
+ *     target already recognises → AUTO. Purely additive.
+ *  6. Everything else → review. In particular every mutation of an existing
+ *     value: changed_value, newly_contradicted, newly_absent.
+ *
+ * Two conditions in rule 5 are worth naming. A null source_url means the
+ * change came from the synthetic inventory-gap path rather than a validated
+ * model candidate, so the anti-hallucination check in validate.ts never
+ * applied to it. And the known-field check exists because that validator
+ * blocks invented citations but nothing blocks an invented *field name* — an
+ * auto-applied change could otherwise mint permanent canonical vocabulary
+ * that no one chose.
+ *
+ * Pure: never reads process.env. Callers resolve the kill switch at the edge.
+ */
+export function isAutoEligible(change: ProposedChange, ctx: PolicyContext): boolean {
+  if (ctx.killSwitch) return false;
+  if (ctx.target === "committee") return false;
+  if (change.validation_reasons.length > 0) return false;
+
+  if (change.change_kind === "unchanged_confirmed") return true;
+
+  if (change.change_kind === "new_field" && change.confidence === "high") {
+    if (!change.record.source_url) return false;
+    if (ctx.knownFields && !ctx.knownFields.has(`${change.dimension}.${change.field}`)) {
+      return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
+export function tierFor(change: ProposedChange, ctx: PolicyContext): RiskTier {
+  return isAutoEligible(change, ctx) ? "auto" : "review";
 }
 
 /** Auto-acceptable only when additive/confirming AND high confidence. */

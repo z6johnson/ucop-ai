@@ -16,8 +16,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { FieldRecord } from "../baseline.ts";
+import { AUTO_POLICY_ID, isAutoEligible, type PolicyContext } from "./diff.ts";
 import { readChangeset, writeChangeset, type Decision } from "./storage.ts";
-import { changeId, type ProposedChange } from "./types.ts";
+import {
+  changeId,
+  type Changeset,
+  type EnrichTarget,
+  type ProposedChange,
+} from "./types.ts";
 import { BASELINE_FILE } from "./targets/baseline.ts";
 import { PEER_FILE } from "./targets/peer.ts";
 import { COMMITTEE_DIMENSION } from "./targets/committee.ts";
@@ -42,6 +48,47 @@ export function bumpMinor(version: string): string {
   const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(version.trim());
   if (!m) return `${version}.1`;
   return `${m[1]}.${Number(m[2]) + 1}.0`;
+}
+
+/**
+ * "0.8.0" → "0.8.1". Used for the policy lane, so the version string alone
+ * says how a release was authorised: a minor bump had a human behind it, a
+ * patch bump did not.
+ */
+export function bumpPatch(version: string): string {
+  const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(version.trim());
+  if (!m) return `${version}.1`;
+  return `${m[1]}.${m[2]}.${Number(m[3]) + 1}`;
+}
+
+/**
+ * The `dimension.field` coordinates the target already recognises.
+ *
+ * Feeds the policy check that stops an auto-applied change inventing new
+ * canonical vocabulary. Derived from the live data rather than a hardcoded
+ * list, so a field a human deliberately added last month is recognised this
+ * month. Returns undefined for committee, which is never auto-eligible.
+ */
+export function knownFieldsFor(
+  repoRoot: string,
+  target: EnrichTarget,
+): Set<string> | undefined {
+  if (target !== "baseline" && target !== "peer") return undefined;
+  const fileName = target === "baseline" ? BASELINE_FILE : PEER_FILE;
+  const path = join(repoRoot, "data", fileName);
+  const raw = JSON.parse(readFileSync(path, "utf-8")) as {
+    entities: Record<string, Record<string, unknown>>;
+  };
+  const known = new Set<string>();
+  for (const entity of Object.values(raw.entities)) {
+    for (const [dimension, bucket] of Object.entries(entity)) {
+      if (typeof bucket !== "object" || bucket === null) continue;
+      for (const field of Object.keys(bucket as Record<string, unknown>)) {
+        known.add(`${dimension}.${field}`);
+      }
+    }
+  }
+  return known;
 }
 
 function acceptedChanges(
@@ -71,6 +118,7 @@ function applyFieldBaseline(
   fileName: string,
   accepted: ProposedChange[],
   runDate: string,
+  approvalMode: "human" | "policy",
 ): { baseVersion: string; newVersion: string; perDimension: Record<string, number>; touched: Set<string> } {
   const path = join(repoRoot, "data", fileName);
   const raw = JSON.parse(readFileSync(path, "utf-8")) as {
@@ -93,13 +141,21 @@ function applyFieldBaseline(
     touched.add(change.entity_id);
   }
 
-  const newVersion = bumpMinor(baseVersion);
+  // Minor for a reviewed release, patch for one policy let through, so the
+  // version alone says whether a human was involved.
+  const newVersion =
+    approvalMode === "policy" ? bumpPatch(baseVersion) : bumpMinor(baseVersion);
   raw.metadata.version = newVersion;
   raw.metadata.created = runDate;
   raw.metadata.notes =
-    `v${newVersion}: automated monthly enrichment applied ${runDate}. ` +
-    `${accepted.length} human-approved field changes across ${touched.size} entities. ` +
-    `See data/enrich/changesets/ for the reviewed changeset and rejection sidecar.`;
+    approvalMode === "policy"
+      ? `v${newVersion}: automated monthly enrichment applied ${runDate}. ` +
+        `${accepted.length} field changes across ${touched.size} entities, published under ` +
+        `policy ${AUTO_POLICY_ID} WITHOUT human review. ` +
+        `See data/enrich/changesets/ for the audit record.`
+      : `v${newVersion}: automated monthly enrichment applied ${runDate}. ` +
+        `${accepted.length} human-approved field changes across ${touched.size} entities. ` +
+        `See data/enrich/changesets/ for the reviewed changeset and rejection sidecar.`;
 
   writeFileSync(path, JSON.stringify(raw, null, 2) + "\n", "utf-8");
   return { baseVersion, newVersion, perDimension, touched };
@@ -154,23 +210,81 @@ function applyCommittee(
 /* Public API                                                          */
 /* ------------------------------------------------------------------ */
 
-export function applyChangeset(repoRoot: string, changesetId: string): ApplySummary {
+/**
+ * The gate. Nothing writes canonical data without passing this.
+ *
+ * Two ways to be authorised, and they are not interchangeable:
+ *
+ *  - `human` — a person reviewed it and signed their name. This is the only
+ *    mode that may carry a value mutation.
+ *  - `policy` — every accepted change is independently re-derived as
+ *    auto-eligible, right here, right now.
+ *
+ * That re-derivation is the point. A changeset file is just text in the repo:
+ * it can be hand-edited, corrupted, or crafted. If this trusted the file's
+ * own `status` or `approval_mode`, anyone able to write a changeset could
+ * smuggle a `changed_value` into the baseline by labelling it policy. Instead
+ * the gate ignores what the file claims about itself and asks the policy
+ * function directly.
+ */
+function assertApprovalGate(
+  changeset: Changeset,
+  accepted: ProposedChange[],
+  ctx: PolicyContext,
+): void {
+  const id = changeset.changeset_id;
+
+  if (changeset.status !== "draft") {
+    throw new ApplyGateError(
+      `Changeset ${id} has status "${changeset.status}", expected "draft". Already applied?`,
+    );
+  }
+
+  if (changeset.approval_mode === "policy") {
+    if (!changeset.policy_id.trim()) {
+      throw new ApplyGateError(
+        `Changeset ${id} claims policy approval but names no policy_id.`,
+      );
+    }
+    if (ctx.killSwitch) {
+      throw new ApplyGateError(
+        `Automatic publishing is disabled (ENRICH_AUTO_APPLY=0); ${id} was not applied.`,
+      );
+    }
+    for (const change of accepted) {
+      if (!isAutoEligible(change, ctx)) {
+        throw new ApplyGateError(
+          `Changeset ${id} is marked policy-approved but ${changeId(change)} ` +
+            `(${change.change_kind}, ${change.confidence} confidence) is not auto-eligible ` +
+            `under ${AUTO_POLICY_ID}. Refusing to apply it without a human.`,
+        );
+      }
+    }
+    return;
+  }
+
+  if (!changeset.reviewed_by.trim()) {
+    throw new ApplyGateError(
+      `Changeset ${id} has empty reviewed_by — a human must review and sign off before apply.`,
+    );
+  }
+}
+
+export function applyChangeset(
+  repoRoot: string,
+  changesetId: string,
+  opts: { killSwitch?: boolean } = {},
+): ApplySummary {
   const parsed = readChangeset(repoRoot, changesetId);
   if (!parsed) throw new ApplyGateError(`Changeset ${changesetId} not found`);
   const { changeset, decisions } = parsed;
 
-  if (changeset.status !== "draft") {
-    throw new ApplyGateError(
-      `Changeset ${changesetId} has status "${changeset.status}", expected "draft". Already applied?`,
-    );
-  }
-  if (!changeset.reviewed_by.trim()) {
-    throw new ApplyGateError(
-      `Changeset ${changesetId} has empty reviewed_by — a human must review and sign off before apply.`,
-    );
-  }
-
   const accepted = acceptedChanges(changeset.changes, decisions);
+  assertApprovalGate(changeset, accepted, {
+    target: changeset.target,
+    killSwitch: opts.killSwitch,
+    knownFields: knownFieldsFor(repoRoot, changeset.target),
+  });
   const runDate = changeset.run_date;
 
   let baseVersion = changeset.base_version;
@@ -181,7 +295,13 @@ export function applyChangeset(repoRoot: string, changesetId: string): ApplySumm
   if (accepted.length > 0) {
     if (changeset.target === "baseline" || changeset.target === "peer") {
       const fileName = changeset.target === "baseline" ? BASELINE_FILE : PEER_FILE;
-      const res = applyFieldBaseline(repoRoot, fileName, accepted, runDate);
+      const res = applyFieldBaseline(
+        repoRoot,
+        fileName,
+        accepted,
+        runDate,
+        changeset.approval_mode,
+      );
       baseVersion = res.baseVersion;
       newVersion = res.newVersion;
       perDimension = res.perDimension;

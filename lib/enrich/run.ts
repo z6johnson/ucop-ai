@@ -22,9 +22,12 @@ import type { FieldRecord } from "../baseline.ts";
 import { discoverSources } from "./discover.ts";
 import { classify } from "./diff.ts";
 import { extractCandidates, type SourceForExtract } from "./extract.ts";
+import { partitionSuppressed, readDecisionsLedger } from "./decisions.ts";
 import { fetchSource } from "./fetch.ts";
 import { allInventorySources, inventoryByEntity } from "./inventory.ts";
 import {
+  BLOCKED_REVIEW_THRESHOLD,
+  DEAD_THRESHOLD,
   pruneLedger,
   readLedger,
   recordFetch,
@@ -63,6 +66,8 @@ export type RunOptions = {
 export type RunResult = {
   changeset: Changeset;
   rejected: Array<{ entity_id: string; dimension: string; field: string; reasons: string[]; raw: unknown }>;
+  /** Proposals withheld by a standing rejection — see lib/enrich/decisions.ts. */
+  suppressed: ProposedChange[];
 };
 
 type RawFieldFile = {
@@ -136,9 +141,11 @@ export async function runFieldEnrichment(opts: RunOptions): Promise<RunResult> {
     sources_unchanged: 0,
     sources_changed: 0,
     sources_dead: 0,
+    sources_blocked: 0,
     sources_discovered: 0,
     entities_swept: entityIds.length,
     dimensions_swept: dimensions.length,
+    suppressed: 0,
   };
 
   // Collect the union of sources to refresh: inventory (baseline) + current urls.
@@ -177,6 +184,15 @@ export async function runFieldEnrichment(opts: RunOptions): Promise<RunResult> {
     } else if (verdict === "dead") {
       manifest.sources_dead += 1;
       deadUrls.push({ url: cu, source_id: src.source_id });
+    } else if (verdict === "blocked") {
+      // Persistently refused by a bot wall. Counted and logged so it can be
+      // checked by hand, but it produces no change — being unable to read a
+      // page says nothing about what the page says.
+      manifest.sources_blocked = (manifest.sources_blocked ?? 0) + 1;
+      console.warn(
+        `[enrich] source ${src.source_id} blocked (HTTP ${outcome.status}) for ` +
+          `${BLOCKED_REVIEW_THRESHOLD}+ consecutive checks — verify by hand: ${src.url}`,
+      );
     }
   }
 
@@ -273,7 +289,7 @@ export async function runFieldEnrichment(opts: RunOptions): Promise<RunResult> {
           value: false,
           source_id: "inventory-gap",
           source_url: null,
-          notes: `Backing source ${dead.source_id} (${dead.url}) returned dead/error for ≥2 consecutive monthly checks; the prior positive assertion is no longer publicly verifiable. Recorded as a gap for committee attention.`,
+          notes: `Backing source ${dead.source_id} (${dead.url}) returned HTTP 404/410 for ≥${DEAD_THRESHOLD} consecutive monthly checks; the prior positive assertion is no longer publicly verifiable. Recorded as a gap for committee attention.`,
         },
         source_artifact_id: "inventory-gap",
         confidence: "medium",
@@ -290,11 +306,24 @@ export async function runFieldEnrichment(opts: RunOptions): Promise<RunResult> {
   const changesetId =
     target === "baseline" ? runDateIso.slice(0, 7) : `${runDateIso.slice(0, 7)}-${target}`;
 
+  // Hold back anything the reviewer already declined in identical form. This
+  // is what stops the queue re-presenting last quarter's decisions; the
+  // withheld set is returned so the caller can write the audit sidecar.
+  const decisionsLedger = readDecisionsLedger(repoRoot);
+  const { kept, suppressed } = partitionSuppressed(
+    dedupeChanges(changes),
+    decisionsLedger,
+    nowIso,
+  );
+  manifest.suppressed = suppressed.length;
+
   const changeset: Changeset = {
     changeset_id: changesetId,
     target,
     run_date: runDateIso,
     status: "draft",
+    approval_mode: "human",
+    policy_id: "",
     reviewed_by: "",
     reviewed_at: "",
     applied_at: "",
@@ -303,7 +332,7 @@ export async function runFieldEnrichment(opts: RunOptions): Promise<RunResult> {
     base_version: file.metadata.version,
     target_version: "",
     inputs_manifest: manifest,
-    changes: dedupeChanges(changes),
+    changes: kept,
   };
 
   pruneLedger(ledger, 120);
@@ -319,6 +348,7 @@ export async function runFieldEnrichment(opts: RunOptions): Promise<RunResult> {
       reasons: r.reasons,
       raw: r.candidate,
     })),
+    suppressed,
   };
 }
 

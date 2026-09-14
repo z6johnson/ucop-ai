@@ -21,6 +21,7 @@ import {
   itemId,
   isoNowUTC,
 } from "../activity.ts";
+import { BOT_USER_AGENT, FEED_ACCEPT, FETCH_TIMEOUT_MS } from "../http.ts";
 
 /* ------------------------------------------------------------------ */
 /* Generic XML parser                                                  */
@@ -83,17 +84,13 @@ function isAiRelevant(text: string): boolean {
 /* HTTP                                                                */
 /* ------------------------------------------------------------------ */
 
-const FETCH_TIMEOUT_MS = 15_000;
-const USER_AGENT =
-  "ucnfi-activity-scan/0.1 (+https://github.com/z6johnson/ucnfi)";
-
 async function fetchText(url: string): Promise<string> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, {
       signal: ctrl.signal,
-      headers: { "User-Agent": USER_AGENT, Accept: "application/atom+xml, application/rss+xml, application/xml, text/xml, */*" },
+      headers: { "User-Agent": BOT_USER_AGENT, Accept: FEED_ACCEPT },
     });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} ${res.statusText} for ${url}`);

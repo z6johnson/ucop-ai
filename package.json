@@ -15,7 +15,9 @@
     "digest:weekly": "node --experimental-strip-types --no-warnings scripts/digest-weekly.ts",
     "brief:weekly": "node --experimental-strip-types --no-warnings scripts/brief-weekly.ts",
     "enrich:monthly": "node --experimental-strip-types --no-warnings scripts/enrich-monthly.ts",
-    "enrich:apply": "node --experimental-strip-types --no-warnings scripts/enrich-apply.ts"
+    "enrich:apply": "node --experimental-strip-types --no-warnings scripts/enrich-apply.ts",
+    "reconcile:ledger": "node --experimental-strip-types --no-warnings scripts/enrich-reconcile-ledger.ts",
+    "seed:decisions": "node --experimental-strip-types --no-warnings scripts/enrich-seed-decisions.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.89.0",

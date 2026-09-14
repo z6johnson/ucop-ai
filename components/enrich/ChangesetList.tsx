@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { DIMENSION_LABEL, type DimensionId } from "@/lib/baseline";
 import type { ChangesetSummary } from "@/lib/enrich/history";
 
@@ -53,23 +55,14 @@ export function PendingList({ items }: { items: ChangesetSummary[] }) {
             {cs.reviewCount > 0 ? ` · ${cs.reviewCount} still need a decision` : ""}
             {cs.rejectedCount > 0 ? ` · ${cs.rejectedCount} declined` : ""}.
           </p>
-          <p
-            className="mt-2 text-xs"
-            style={{ color: "var(--color-text-subtle)" }}
-          >
-            Review the <code>DECISION:</code> lines and set{" "}
-            <code>reviewed_by</code> in{" "}
-            <code>data/enrich/changesets/{cs.changeset_id}.md</code>, then run:
+          <p className="mt-2 text-sm">
+            <Link
+              href={`/admin/enrich/${cs.changeset_id}`}
+              style={{ color: "var(--color-accent)" }}
+            >
+              Review and publish →
+            </Link>
           </p>
-          <pre
-            className="mt-1 overflow-x-auto rounded p-2 text-xs"
-            style={{
-              background: "var(--color-surface-muted, rgba(0,0,0,0.04))",
-              color: "var(--color-text)",
-            }}
-          >
-            npm run enrich:apply -- --changeset {cs.changeset_id}
-          </pre>
         </li>
       ))}
     </ul>
@@ -124,7 +117,16 @@ export function AppliedList({ items }: { items: ChangesetSummary[] }) {
             style={{ color: "var(--color-text-subtle)" }}
           >
             {cs.base_version ? `from v${cs.base_version} · ` : ""}
-            reviewed by {cs.reviewed_by || "—"}
+            {/* Never conflate the two lanes — "reviewed by" has to mean it. */}
+            {cs.approval_mode === "policy" ? (
+              <span style={{ color: "var(--color-warn-strong)" }}>
+                published automatically · policy {cs.policy_id || "—"} · no human review
+              </span>
+            ) : (
+              <span style={{ color: "var(--color-accent)" }}>
+                reviewed by {cs.reviewed_by || "—"}
+              </span>
+            )}
             {cs.rejectedCount > 0 ? ` · ${cs.rejectedCount} declined` : ""}
           </p>
         </li>

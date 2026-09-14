@@ -31,6 +31,9 @@ export type ChangesetSummary = {
   target: EnrichTarget;
   status: ChangesetStatus;
   run_date: string;
+  /** Which lane applied this — see ChangesetMeta.approval_mode. */
+  approval_mode: "human" | "policy";
+  policy_id: string;
   reviewed_by: string;
   reviewed_at: string;
   applied_at: string;
@@ -48,7 +51,7 @@ export type ChangesetSummary = {
   inputs_manifest: EnrichInputsManifest;
 };
 
-function summarize(
+export function summarizeChangeset(
   changeset: Changeset,
   decisions: Record<string, Decision>,
 ): ChangesetSummary {
@@ -76,6 +79,8 @@ function summarize(
     target: changeset.target,
     status: changeset.status,
     run_date: changeset.run_date,
+    approval_mode: changeset.approval_mode,
+    policy_id: changeset.policy_id,
     reviewed_by: changeset.reviewed_by,
     reviewed_at: changeset.reviewed_at,
     applied_at: changeset.applied_at,
@@ -96,7 +101,7 @@ export function listChangesetSummaries(repoRoot: string): ChangesetSummary[] {
   const out: ChangesetSummary[] = [];
   for (const id of listChangesetIds(repoRoot)) {
     const parsed = readChangeset(repoRoot, id);
-    if (parsed) out.push(summarize(parsed.changeset, parsed.decisions));
+    if (parsed) out.push(summarizeChangeset(parsed.changeset, parsed.decisions));
   }
   return out;
 }

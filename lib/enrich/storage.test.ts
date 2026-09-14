@@ -26,6 +26,8 @@ function changeset(changes: ProposedChange[]): Changeset {
     target: "baseline",
     run_date: "2026-06-01",
     status: "draft",
+    approval_mode: "human",
+    policy_id: "",
     reviewed_by: "",
     reviewed_at: "",
     applied_at: "",

@@ -1,10 +1,18 @@
 /**
- * Minimal GitHub Contents API wrapper.
+ * Minimal GitHub API wrapper — the repo is the database.
  *
- * Used to commit new memo markdown files to the repo on Vercel, where the
- * serverless filesystem is read-only. Committing to the configured branch
- * triggers a Vercel redeploy via the standard Git integration, which is how
- * the new memo becomes visible on the live site.
+ * On Vercel the serverless filesystem is read-only, so every write goes
+ * through the Contents / Git Data API and lands as a commit on the configured
+ * branch; the standard Git integration then rebuilds the site. That is how
+ * memos publish, how the activity feed grows, and how enrichment decisions
+ * are recorded.
+ *
+ * Reads matter too: anything written this way is invisible to the deployed
+ * bundle until the rebuild finishes (~60s), so surfaces that must reflect a
+ * just-saved write read back through getRepoFileText rather than the disk.
+ *
+ * Also wraps workflow_dispatch, so the app can hand work that needs a real
+ * checkout — applying a reviewed changeset, running Python — to Actions.
  */
 
 import "server-only";
@@ -210,16 +218,145 @@ export async function commitFiles(params: {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Directory listing                                                   */
+/* ------------------------------------------------------------------ */
+
+export type RepoDirEntry = {
+  name: string;
+  path: string;
+  sha: string;
+  size: number;
+};
+
+/**
+ * Lists a directory on the configured branch. Empty when the path is missing
+ * or is a file rather than a directory — callers treat "no changesets" and
+ * "no changesets directory" identically.
+ */
+export async function listRepoDir(path: string): Promise<RepoDirEntry[]> {
+  const { token, repo, branch } = config();
+  const url = `${API_BASE}/repos/${repo}/contents/${encodeURI(path)}?ref=${encodeURIComponent(branch)}`;
+  const res = await fetch(url, { headers: headers(token), cache: "no-store" });
+  if (res.status === 404) return [];
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new GitHubApiError(
+      res.status,
+      `GitHub GET contents (dir) failed (${res.status}): ${body.slice(0, 200)}`,
+    );
+  }
+  const data = (await res.json()) as unknown;
+  if (!Array.isArray(data)) return [];
+  return (data as Array<Record<string, unknown>>)
+    .filter((e) => e.type === "file")
+    .map((e) => ({
+      name: String(e.name ?? ""),
+      path: String(e.path ?? ""),
+      sha: String(e.sha ?? ""),
+      size: Number(e.size ?? 0),
+    }));
+}
+
+/* ------------------------------------------------------------------ */
+/* Workflows                                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Triggers a workflow_dispatch run.
+ *
+ * The fine-grained PAT needs `Actions: Read and write` on top of `Contents`;
+ * without it this 403s with a message that reads like a bad token. The
+ * workflow file must also already exist on the repo's default branch —
+ * GitHub resolves workflow_dispatch there regardless of `ref`.
+ *
+ * Returns 204 with an empty body and no run id, so callers poll
+ * listWorkflowRuns to find the run they started.
+ */
+export async function dispatchWorkflow(params: {
+  workflowFile: string;
+  ref?: string;
+  inputs?: Record<string, string>;
+}): Promise<void> {
+  const { token, repo, branch } = config();
+  const url = `${API_BASE}/repos/${repo}/actions/workflows/${encodeURIComponent(params.workflowFile)}/dispatches`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { ...headers(token), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ref: params.ref ?? branch,
+      ...(params.inputs ? { inputs: params.inputs } : {}),
+    }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new GitHubApiError(
+      res.status,
+      `GitHub workflow dispatch failed (${res.status}): ${text.slice(0, 200)}`,
+    );
+  }
+  // 204 No Content — deliberately not parsed.
+}
+
+export type WorkflowRun = {
+  id: number;
+  status: string;
+  conclusion: string | null;
+  html_url: string;
+  created_at: string;
+  event: string;
+};
+
+export async function listWorkflowRuns(
+  workflowFile: string,
+  opts: { perPage?: number; branch?: string } = {},
+): Promise<WorkflowRun[]> {
+  const { token, repo, branch } = config();
+  const params = new URLSearchParams({
+    per_page: String(opts.perPage ?? 10),
+    branch: opts.branch ?? branch,
+  });
+  const url = `${API_BASE}/repos/${repo}/actions/workflows/${encodeURIComponent(workflowFile)}/runs?${params}`;
+  const res = await fetch(url, { headers: headers(token), cache: "no-store" });
+  if (res.status === 404) return [];
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new GitHubApiError(
+      res.status,
+      `GitHub list workflow runs failed (${res.status}): ${text.slice(0, 200)}`,
+    );
+  }
+  const data = (await res.json()) as { workflow_runs?: Array<Record<string, unknown>> };
+  return (data.workflow_runs ?? []).map((r) => ({
+    id: Number(r.id ?? 0),
+    status: String(r.status ?? ""),
+    conclusion: r.conclusion == null ? null : String(r.conclusion),
+    html_url: String(r.html_url ?? ""),
+    created_at: String(r.created_at ?? ""),
+    event: String(r.event ?? ""),
+  }));
+}
+
 export type PutFileResult = {
   sha: string;
   commitSha: string;
   htmlUrl: string;
 };
 
+/**
+ * Creates or updates a single file.
+ *
+ * `sha` is required by GitHub to update an existing path — omitting it gets a
+ * 422 — and it doubles as the concurrency check: pass the sha the caller
+ * read, and a file that moved underneath them fails loudly instead of being
+ * clobbered. Callers that genuinely mean "create" omit it.
+ */
 export async function putFile(params: {
   path: string;
   message: string;
   content: string; // raw UTF-8
+  sha?: string;
   committer?: { name: string; email: string };
 }): Promise<PutFileResult> {
   const { token, repo, branch } = config();
@@ -228,6 +365,7 @@ export async function putFile(params: {
     message: params.message,
     content: Buffer.from(params.content, "utf-8").toString("base64"),
     branch,
+    ...(params.sha ? { sha: params.sha } : {}),
     ...(params.committer ? { committer: params.committer } : {}),
   };
   const res = await fetch(url, {
