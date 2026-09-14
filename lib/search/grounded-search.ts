@@ -510,10 +510,42 @@ export type RunGroundedSearchArgs = {
   logPrefix?: string;
 };
 
+// Statuses worth retrying: rate limits (429) and the gateway/upstream
+// errors (5xx) the LiteLLM proxy emits when the underlying provider (here,
+// Vertex AI) is briefly out of quota or unreachable. Concurrency=5 across
+// 23 members means bursts of parallel calls are routine, not exceptional.
+const RETRYABLE_STATUSES = new Set([408, 409, 429, 500, 502, 503, 504, 529]);
+const MAX_ATTEMPTS = 3;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function backoff(
+  logPrefix: string,
+  logTag: string,
+  attempt: number,
+  reason: string | number,
+): Promise<void> {
+  // ~500ms, ~1s (+ up to 250ms jitter).
+  const ms = 2 ** (attempt - 1) * 500 + Math.floor(Math.random() * 250);
+  console.warn(
+    `${logPrefix} grounded-search retrying ${logTag} attempt=${attempt} reason=${reason} in ${ms}ms`,
+  );
+  await sleep(ms);
+}
+
 /**
  * Run one grounded completion and return the model's answer plus the
- * grounding citations. Returns `null` on transport/HTTP failure so the
- * caller skips rather than letting the model invent URLs with no backing.
+ * grounding citations. Retries transient failures (429/5xx/network errors)
+ * with backoff, and also retries once or twice on an empty/unparseable
+ * answer — grounded search is stochastic enough, and the model's JSON
+ * compliance flaky enough (see the module doc), that a second attempt often
+ * succeeds where the first didn't. Returns `null` only on a non-retryable
+ * or exhausted transport failure, so the caller skips rather than letting
+ * the model invent URLs with no backing. An empty/unparseable answer that
+ * survives every attempt is still returned (not null) so the caller's own
+ * parseSearchItems() logs it consistently.
  */
 export async function runGroundedSearch(
   args: RunGroundedSearchArgs,
@@ -523,57 +555,82 @@ export async function runGroundedSearch(
   const maxTokens = args.maxTokens ?? 2048;
   const tools = groundingTools();
 
-  let res: Response;
-  try {
-    res = await fetch(chatEndpoint(), {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${authToken()}`,
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: maxTokens,
-        temperature: 0,
-        messages: [
-          { role: "system", content: args.systemPrompt },
-          { role: "user", content: args.userPrompt },
-        ],
-        // Turn on live web search; without this Gemini answers from memory.
-        ...(tools.length > 0 ? { tools } : {}),
-      }),
-    });
-  } catch (err) {
-    console.warn(`${logPrefix} grounded-search request failed ${args.logTag} err=${(err as Error).message}`);
-    return null;
-  }
+  let lastResult: GroundedResult | null = null;
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.warn(`${logPrefix} grounded-search HTTP ${res.status} ${args.logTag} ${body.slice(0, 200)}`);
-    return null;
-  }
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch(chatEndpoint(), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${authToken()}`,
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          temperature: 0,
+          messages: [
+            { role: "system", content: args.systemPrompt },
+            { role: "user", content: args.userPrompt },
+          ],
+          // Turn on live web search; without this Gemini answers from memory.
+          ...(tools.length > 0 ? { tools } : {}),
+        }),
+      });
+    } catch (err) {
+      if (attempt < MAX_ATTEMPTS) {
+        await backoff(logPrefix, args.logTag, attempt, "connection");
+        continue;
+      }
+      console.warn(`${logPrefix} grounded-search request failed ${args.logTag} err=${(err as Error).message}`);
+      return null;
+    }
 
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    console.warn(`${logPrefix} grounded-search non-JSON body ${args.logTag}`);
-    return null;
-  }
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      if (RETRYABLE_STATUSES.has(res.status) && attempt < MAX_ATTEMPTS) {
+        await backoff(logPrefix, args.logTag, attempt, res.status);
+        continue;
+      }
+      console.warn(`${logPrefix} grounded-search HTTP ${res.status} ${args.logTag} ${body.slice(0, 200)}`);
+      return null;
+    }
 
-  const choice = (data as { choices?: Array<Record<string, unknown>> })?.choices?.[0];
-  const message = choice?.message as { content?: unknown } | undefined;
-  let text = "";
-  if (typeof message?.content === "string") {
-    text = message.content;
-  } else if (Array.isArray(message?.content)) {
-    // Some gateways return content as an array of parts.
-    text = message.content
-      .map((p) => (p && typeof p === "object" && typeof (p as { text?: unknown }).text === "string" ? (p as { text: string }).text : ""))
-      .join("");
+    let data: unknown;
+    try {
+      data = await res.json();
+    } catch {
+      if (attempt < MAX_ATTEMPTS) {
+        await backoff(logPrefix, args.logTag, attempt, "non-json-body");
+        continue;
+      }
+      console.warn(`${logPrefix} grounded-search non-JSON body ${args.logTag}`);
+      return null;
+    }
+
+    const choice = (data as { choices?: Array<Record<string, unknown>> })?.choices?.[0];
+    const message = choice?.message as { content?: unknown } | undefined;
+    let text = "";
+    if (typeof message?.content === "string") {
+      text = message.content;
+    } else if (Array.isArray(message?.content)) {
+      // Some gateways return content as an array of parts.
+      text = message.content
+        .map((p) => (p && typeof p === "object" && typeof (p as { text?: unknown }).text === "string" ? (p as { text: string }).text : ""))
+        .join("");
+    }
+    const stop = (choice?.finish_reason as string) ?? "?";
+    const citations = extractGroundingCitations(data);
+    const result: GroundedResult = { text: text.trim(), citations, stop };
+
+    const usable = result.text.length > 0 && tryParseJsonBlock(result.text) !== null;
+    if (!usable && attempt < MAX_ATTEMPTS) {
+      lastResult = result;
+      await backoff(logPrefix, args.logTag, attempt, result.text ? "unparseable" : "empty");
+      continue;
+    }
+    return result;
   }
-  const stop = (choice?.finish_reason as string) ?? "?";
-  const citations = extractGroundingCitations(data);
-  return { text: text.trim(), citations, stop };
+  return lastResult;
 }
