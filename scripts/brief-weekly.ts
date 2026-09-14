@@ -22,10 +22,12 @@
  *   LITELLM_BASE_URL     — defaults to https://tritonai-api.ucsd.edu
  *   LITELLM_OPENAI_URL   — defaults to ${LITELLM_BASE_URL}/v1/chat/completions
  *   SEARCH_MODEL         — grounded web-search model (default gemini-3.5-flash)
- *   BRIEF_MODEL          — defaults to CLAUDE_MODEL (the Brief stays on
- *                          Claude by default; it's the flagship weekly
- *                          document and the one place quality is worth the
- *                          cost over the open-weight models used elsewhere)
+ *   BRIEF_MODEL          — defaults to api-glm-5.3 (open-weight, same as
+ *                          chat/digest/extract). Editions auto-publish with
+ *                          no human review gate, so watch quality on the
+ *                          first few real runs; set to a Claude model
+ *                          (e.g. claude-sonnet-5) to fall back if it
+ *                          underperforms
  *   END_DATE             — YYYY-MM-DD, defaults to today
  *   LOOKBACK_DAYS        — external/peer/vendor RSS lookback, default 7
  *   WEB_LOOKBACK_DAYS    — web-search lookback, default = LOOKBACK_DAYS

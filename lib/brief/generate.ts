@@ -1,7 +1,7 @@
 /**
  * Brief generator.
  *
- * Pulls four feeds, calls Claude with structured-output instructions,
+ * Pulls four feeds, calls an LLM with structured-output instructions,
  * validates every anchor against the live baseline / peer baseline /
  * committee directory, and returns the draft edition. The caller
  * (scripts/brief-weekly.ts) writes it to disk.
@@ -13,7 +13,7 @@ import {
   isoNowUTC,
   isoWeekLabel,
 } from "../activity.ts";
-import { CLAUDE_MODEL, cachedSystemBlocks, getLiteLLMClient } from "../litellm.ts";
+import { cachedSystemBlocks, getLiteLLMClient } from "../litellm.ts";
 import { collectCommitteeSignal } from "./sources/committee.ts";
 import { collectExternal } from "./sources/external.ts";
 import { collectPeerMoves } from "./sources/peers.ts";
@@ -37,7 +37,15 @@ import type {
   SourcesConfig,
 } from "./types.ts";
 
-const BRIEF_MODEL = process.env.BRIEF_MODEL || CLAUDE_MODEL;
+// Open-weight by default, same as chat/digest/extract — try it before paying
+// for Claude. This is the one call site where that's a real bet: editions
+// auto-publish with no human review gate (see AUTO_REVIEWER below), so a
+// quality regression ships straight to the Brief's readers. The one backstop
+// is validateItems() below, which strips any item whose anchors don't check
+// out against the live baseline/peer/committee data regardless of model —
+// it catches fabrication, not weak analysis. Set BRIEF_MODEL=<CLAUDE_MODEL
+// value> to fall back to Claude if an open-weight edition reads worse.
+const BRIEF_MODEL = process.env.BRIEF_MODEL || "api-glm-5.3";
 /**
  * Output budget for the drafting call. Three to five items, each carrying
  * four prose fields plus feed_sources / baseline_anchors / peer_anchors /
