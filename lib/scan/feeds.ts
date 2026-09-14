@@ -101,6 +101,30 @@ async function fetchText(url: string): Promise<string> {
   }
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// arXiv's public API rate-limits aggressively under concurrent access (its
+// own guidance asks for no more than one request at a time), and this scan
+// fires up to CONCURRENCY members' worth of arxiv queries in parallel — so
+// occasional 429s here are expected, not exceptional, and worth a retry.
+const ARXIV_MAX_ATTEMPTS = 3;
+
+async function fetchTextWithRetry(url: string): Promise<string> {
+  for (let attempt = 1; attempt <= ARXIV_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await fetchText(url);
+    } catch (err) {
+      const retryable = /HTTP 429|HTTP 5\d\d/.test((err as Error).message) || (err as Error).name === "AbortError";
+      if (!retryable || attempt === ARXIV_MAX_ATTEMPTS) throw err;
+      const ms = 2 ** attempt * 1000 + Math.floor(Math.random() * 500);
+      await sleep(ms);
+    }
+  }
+  throw new Error("unreachable");
+}
+
 /* ------------------------------------------------------------------ */
 /* RSS / Atom                                                          */
 /* ------------------------------------------------------------------ */
@@ -247,7 +271,7 @@ async function collectFromArxiv(
   // "Aric Hagberg"); encodeURIComponent turns spaces into %20.
   const q = encodeURIComponent(`au:"${authorQuery.replace(/"/g, "")}"`);
   const url = `https://export.arxiv.org/api/query?search_query=${q}&sortBy=submittedDate&sortOrder=descending&max_results=15`;
-  const xml = await fetchText(url);
+  const xml = await fetchTextWithRetry(url);
   const entries = parseFeed(xml);
   const lookback = opts.lookbackDays ?? 7; // arXiv submissions are slower-cadence; widen
   const out: ActivityItem[] = [];
