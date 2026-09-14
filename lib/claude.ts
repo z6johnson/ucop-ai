@@ -23,7 +23,13 @@ import {
 } from "../content/northstar.ts";
 import { baselineBlock } from "./baseline.ts";
 import { committeeContextSummary } from "./committee.ts";
-import { CLAUDE_MAX_TOKENS, CLAUDE_MODEL, getLiteLLMClient } from "./litellm.ts";
+import { CLAUDE_MAX_TOKENS, cachedSystemBlocks, getLiteLLMClient } from "./litellm.ts";
+
+// Open-weight by default — this system prompt uses no Anthropic-specific
+// tools, so it doesn't need Claude. Override to fall back to a Claude model
+// (see CLAUDE_MODEL in litellm.ts) if the open model's grounding/citation
+// discipline proves inadequate in practice.
+const CHAT_MODEL = process.env.CHAT_MODEL || "api-glm-5.3";
 
 export {
   CLAUDE_MAX_TOKENS,
@@ -165,12 +171,12 @@ export function startChatStream(
   signal?: AbortSignal,
 ) {
   const client = getLiteLLMClient();
-  console.info(`[chat] provider=litellm model=${JSON.stringify(CLAUDE_MODEL)}`);
+  console.info(`[chat] provider=litellm model=${JSON.stringify(CHAT_MODEL)}`);
   return client.messages.stream(
     {
-      model: CLAUDE_MODEL,
+      model: CHAT_MODEL,
       max_tokens: CLAUDE_MAX_TOKENS,
-      system: systemPrompt(),
+      system: cachedSystemBlocks(systemPrompt(), CHAT_MODEL),
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
     },
     signal ? { signal } : undefined,

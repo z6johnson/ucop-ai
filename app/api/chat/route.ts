@@ -7,8 +7,8 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// Opus with the full baseline in the first (uncached) turn can easily
-// exceed Vercel's 60s Hobby-plan default. 300s is the Pro-plan ceiling.
+// The full baseline in the first (uncached) turn can easily exceed
+// Vercel's 60s Hobby-plan default. 300s is the Pro-plan ceiling.
 export const maxDuration = 300;
 
 // If LiteLLM hasn't produced a single text delta in this many ms,
