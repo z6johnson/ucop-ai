@@ -13,7 +13,7 @@ import {
   isoNowUTC,
   isoWeekLabel,
 } from "../activity.ts";
-import { CLAUDE_MODEL, getLiteLLMClient } from "../litellm.ts";
+import { CLAUDE_MODEL, cachedSystemBlocks, getLiteLLMClient } from "../litellm.ts";
 import { collectCommitteeSignal } from "./sources/committee.ts";
 import { collectExternal } from "./sources/external.ts";
 import { collectPeerMoves } from "./sources/peers.ts";
@@ -171,28 +171,31 @@ export async function generateBrief(
   const message = await getLiteLLMClient().messages.create({
     model: BRIEF_MODEL,
     max_tokens: BRIEF_MAX_TOKENS,
-    system: [
-      {
-        type: "text",
-        text: briefFramingBlock(),
-        cache_control: { type: "ephemeral" },
-      },
-      {
-        type: "text",
-        text: baselineBlock(),
-        cache_control: { type: "ephemeral" },
-      },
-      {
-        type: "text",
-        text: peerBaselineBlock(),
-        cache_control: { type: "ephemeral" },
-      },
-      {
-        type: "text",
-        text: `## COMMITTEE DIRECTORY\n\n${committeeContextSummary()}`,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
+    system: cachedSystemBlocks(
+      [
+        {
+          type: "text",
+          text: briefFramingBlock(),
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: baselineBlock(),
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: peerBaselineBlock(),
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: `## COMMITTEE DIRECTORY\n\n${committeeContextSummary()}`,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+      BRIEF_MODEL,
+    ),
     messages: [{ role: "user", content: userPrompt }],
   });
 

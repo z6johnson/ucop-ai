@@ -3,7 +3,7 @@
  *
  * Pulls the RSS feeds (external / peer / vendor), a live web-search pass
  * over the TritonAI LiteLLM `internet_tool` MCP, and the committee signal,
- * drafts three to five items with Claude via the same LiteLLM proxy,
+ * drafts three to five items with an LLM via the same LiteLLM proxy,
  * validates every baseline anchor, and writes a PUBLISHED markdown edition
  * under data/brief/editions/.
  *
@@ -22,7 +22,10 @@
  *   LITELLM_BASE_URL     — defaults to https://tritonai-api.ucsd.edu
  *   LITELLM_OPENAI_URL   — defaults to ${LITELLM_BASE_URL}/v1/chat/completions
  *   SEARCH_MODEL         — grounded web-search model (default gemini-3.5-flash)
- *   BRIEF_MODEL          — defaults to CLAUDE_MODEL
+ *   BRIEF_MODEL          — defaults to CLAUDE_MODEL (the Brief stays on
+ *                          Claude by default; it's the flagship weekly
+ *                          document and the one place quality is worth the
+ *                          cost over the open-weight models used elsewhere)
  *   END_DATE             — YYYY-MM-DD, defaults to today
  *   LOOKBACK_DAYS        — external/peer/vendor RSS lookback, default 7
  *   WEB_LOOKBACK_DAYS    — web-search lookback, default = LOOKBACK_DAYS

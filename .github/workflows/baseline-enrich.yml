@@ -78,6 +78,7 @@ jobs:
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
           LITELLM_BASE_URL: ${{ vars.LITELLM_BASE_URL }}
           ENRICH_MODEL: ${{ vars.ENRICH_MODEL }}
+          EXTRACT_MODEL: ${{ vars.EXTRACT_MODEL }}
           TARGET: ${{ inputs.target || 'all' }}
           LOOKBACK_DAYS: ${{ inputs.lookback_days || '35' }}
           FULL_SWEEP: ${{ inputs.full_sweep == false && '0' || '1' }}

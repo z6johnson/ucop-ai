@@ -5,8 +5,9 @@ name: Committee AI activity scan
 #   Gemini model (default gemini-3.5-flash) via the UCSD TritonAI LiteLLM
 #   proxy for tier-2 web search, then commits new items to
 #   data/ucnfi-committee/activity/.
-# - Weekly digest reads the last 7 days of items, calls Claude through
-#   the same LiteLLM proxy, and commits the markdown digest.
+# - Weekly digest reads the last 7 days of items, calls an LLM (open-weight
+#   by default — see DIGEST_MODEL in lib/scan/digest.ts) through the same
+#   LiteLLM proxy, and commits the markdown digest.
 #
 # Both jobs commit back to the same branch the workflow ran on (default
 # branch on a normal schedule; the working branch when triggered via

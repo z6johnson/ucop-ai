@@ -14,7 +14,7 @@
  *   LITELLM_API_KEY
  *
  * Optional:
- *   DIGEST_MODEL  — defaults to claude-sonnet-4-6
+ *   DIGEST_MODEL  — defaults to api-deepseek-v4-flash (open-weight)
  *   END_DATE      — YYYY-MM-DD, defaults to today
  */
 

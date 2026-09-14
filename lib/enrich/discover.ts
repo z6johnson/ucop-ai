@@ -14,10 +14,13 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 import { canonicalUrl, itemId } from "../activity.ts";
-import { getLiteLLMClient } from "../litellm.ts";
+import { CLAUDE_MODEL, getLiteLLMClient } from "../litellm.ts";
 import type { DiscoveredArtifact } from "./types.ts";
 
-const SCAN_MODEL = process.env.SCAN_MODEL || process.env.CLAUDE_MODEL || "claude-sonnet-4-6";
+// Anthropic's server-side web_search tool (below) is Claude-only — the
+// open-weight models on the TritonAI hub don't support it — so this stays
+// on CLAUDE_MODEL rather than following the rest of the app to open-weight.
+const SCAN_MODEL = process.env.SCAN_MODEL || CLAUDE_MODEL;
 const DEFAULT_MAX_TOOL_USES = 4;
 
 export type DiscoverArgs = {

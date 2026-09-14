@@ -99,7 +99,7 @@ Every page is prerendered at build time (28 static pages, including all 20 entit
 
 ### Step 2 — Grounded Chat
 
-Adds the Anthropic Claude SDK (`@anthropic-ai/sdk`) pointed at the UCSD TritonAI LiteLLM proxy — the sole LLM provider — and a streaming `/api/chat` route with prompt caching of the full baseline.
+Adds the Anthropic Claude SDK (`@anthropic-ai/sdk`) pointed at the UCSD TritonAI LiteLLM proxy — the sole LLM provider — and a streaming `/api/chat` route with prompt caching of the full baseline. The SDK is just the wire format here: `/api/chat` calls an open-weight model on the proxy by default (`CHAT_MODEL`), not Claude.
 
 **Environment variables** (Project Settings → Environment Variables — add to Production, Preview, and Development):
 
@@ -174,7 +174,8 @@ No required config changes. Optional:
 |---|---|---|
 | `LITELLM_API_KEY` | Step 2 | TritonAI LiteLLM bearer token for chat + memo generation |
 | `LITELLM_BASE_URL` | Step 2 | Optional LiteLLM proxy URL (defaults to `https://tritonai-api.ucsd.edu`) |
-| `CLAUDE_MODEL` | Step 2 | Optional. Model ID used by both providers. Defaults to `claude-sonnet-4-6`. |
+| `CHAT_MODEL` | Step 2 | Optional. Model ID used by `/api/chat`. Defaults to `api-glm-5.3` (open-weight). |
+| `CLAUDE_MODEL` | Step 2 | Optional. Model ID used where Claude is specifically required (the Brief; web_search-tool calls). Defaults to `claude-sonnet-5`. |
 | `DATABASE_URL` | Step 3 | Neon Postgres connection string |
 | `ADMIN_PASSWORD` | Step 3 | Admin cookie gate for editing routes |
 | `NFI_BASE_URL` | Step 3 | Absolute URL used when generating share links |

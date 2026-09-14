@@ -16,10 +16,14 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 import type { FieldRecord } from "../baseline.ts";
-import { getLiteLLMClient, CLAUDE_MODEL } from "../litellm.ts";
+import { cachedSystemBlocks, getLiteLLMClient } from "../litellm.ts";
 import type { CandidateField } from "./types.ts";
 
-const EXTRACT_MODEL = process.env.ENRICH_MODEL || CLAUDE_MODEL;
+// Deliberately its own env var, not ENRICH_MODEL: that one also drives
+// committee_verify.ts's web_search-tool call (see enrich-monthly.ts), which
+// needs a Claude model. Extraction here is plain structured-JSON output, no
+// tools, so it defaults to an open-weight model instead.
+const EXTRACT_MODEL = process.env.EXTRACT_MODEL || "api-deepseek-v4-flash";
 const EXTRACT_MAX_TOKENS = 3072;
 
 /** One source the model may cite. */
@@ -139,9 +143,10 @@ export async function extractCandidates(args: ExtractArgs): Promise<CandidateFie
     message = await getLiteLLMClient().messages.create({
       model: EXTRACT_MODEL,
       max_tokens: EXTRACT_MAX_TOKENS,
-      system: [
-        { type: "text", text: framingBlock(), cache_control: { type: "ephemeral" } },
-      ],
+      system: cachedSystemBlocks(
+        [{ type: "text", text: framingBlock(), cache_control: { type: "ephemeral" } }],
+        EXTRACT_MODEL,
+      ),
       messages: [{ role: "user", content: userPrompt(args) }],
     });
   } catch (err) {

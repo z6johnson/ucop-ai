@@ -15,10 +15,12 @@ import {
   readItemsForDates,
   scopeOf,
 } from "../activity.ts";
-import { getLiteLLMClient } from "../litellm.ts";
+import { cachedSystemBlocks, getLiteLLMClient } from "../litellm.ts";
 import { committeeContextSummary, listMembers } from "../committee.ts";
 
-const DIGEST_MODEL = process.env.DIGEST_MODEL || "claude-sonnet-4-6";
+// Open-weight by default — plain summarization/formatting over structured
+// input, no Anthropic-specific tools needed.
+const DIGEST_MODEL = process.env.DIGEST_MODEL || "api-deepseek-v4-flash";
 const DIGEST_MAX_TOKENS = 4096;
 
 /* ------------------------------------------------------------------ */
@@ -190,18 +192,21 @@ export async function buildWeeklyDigest(
     getLiteLLMClient().messages.create({
       model: DIGEST_MODEL,
       max_tokens: DIGEST_MAX_TOKENS,
-      system: [
-        {
-          type: "text",
-          text: FRAMING.replace("<ISO_WEEK_LABEL>", isoWeek),
-          cache_control: { type: "ephemeral" },
-        },
-        {
-          type: "text",
-          text: committeeBlock(),
-          cache_control: { type: "ephemeral" },
-        },
-      ],
+      system: cachedSystemBlocks(
+        [
+          {
+            type: "text",
+            text: FRAMING.replace("<ISO_WEEK_LABEL>", isoWeek),
+            cache_control: { type: "ephemeral" },
+          },
+          {
+            type: "text",
+            text: committeeBlock(),
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+        DIGEST_MODEL,
+      ),
       messages: [{ role: "user", content: userPrompt }],
     }),
   );

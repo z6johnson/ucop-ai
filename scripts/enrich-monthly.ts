@@ -16,8 +16,12 @@
  *   MAX_ENTITIES=2 npm run enrich:monthly          # smoke run
  *
  * Env required: LITELLM_API_KEY
- * Optional: ENRICH_MODEL, TARGET, LOOKBACK_DAYS (default 35), FULL_SWEEP,
- *           RUN_DATE (YYYY-MM-DD), MAX_ENTITIES
+ * Optional: ENRICH_MODEL (committee re-verification + the generated_by_model
+ *           stamp — needs a Claude model, since committee verification uses
+ *           Anthropic's web_search tool; see lib/enrich/committee_verify.ts),
+ *           EXTRACT_MODEL (field extraction — open-weight by default, see
+ *           lib/enrich/extract.ts), TARGET, LOOKBACK_DAYS (default 35),
+ *           FULL_SWEEP, RUN_DATE (YYYY-MM-DD), MAX_ENTITIES
  */
 
 import { isoNowUTC } from "../lib/activity.ts";
