@@ -18,11 +18,14 @@ name: Committee AI activity scan
 #                      tier-2 scan and the weekly digest
 
 on:
-  schedule:
-    # 13:00 UTC daily — late enough that yesterday's UTC-late posts are indexed
-    - cron: "0 13 * * *"
-    # 14:00 UTC every Sunday — runs after Sunday's daily scan
-    - cron: "0 14 * * 0"
+  # Scheduled runs are paused pending a review of gemini-3.5-flash cost in
+  # the daily tier-2 scan (SEARCH_MODEL). Manual runs via workflow_dispatch
+  # still work. Restore by uncommenting the schedule block below.
+  # schedule:
+  #   # 13:00 UTC daily — late enough that yesterday's UTC-late posts are indexed
+  #   - cron: "0 13 * * *"
+  #   # 14:00 UTC every Sunday — runs after Sunday's daily scan
+  #   - cron: "0 14 * * 0"
   workflow_dispatch:
     inputs:
       job:
