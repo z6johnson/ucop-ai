@@ -13,8 +13,11 @@ name: Weekly UC President's Brief
 #   LITELLM_API_KEY  — TritonAI bearer token (LLM synthesis + grounded search)
 
 on:
-  schedule:
-    - cron: "0 15 * * 0"
+  # Scheduled runs are paused pending a review of gemini-3.5-flash cost in
+  # the live web-search pass (SEARCH_MODEL). Manual runs via
+  # workflow_dispatch still work. Restore by uncommenting the line below.
+  # schedule:
+  #   - cron: "0 15 * * 0"
   workflow_dispatch:
     inputs:
       end_date:
